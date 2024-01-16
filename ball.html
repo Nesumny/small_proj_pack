@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Physics Simulation</title>
+    <style>
+        body {
+    margin: 0;
+    overflow: hidden;
+    background-color: white;
+}
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="ballCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('ballCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+let isDragging = false;
+let draggedBall = null;
+
+const balls = [
+    {
+        x: canvas.width / 4,
+        y: canvas.height / 2,
+        radius: 50,
+        color: 'blue',
+        vx: 2,
+        vy: 2,
+        elasticity: 0.8,
+    },
+    {
+        x: canvas.width / 2,
+        y: canvas.height / 4,
+        radius: 60,
+        color: 'red',
+        vx: -2,
+        vy: 3,
+        elasticity: 0.8,
+    },
+    {
+        x: 3 * canvas.width / 4,
+        y: 3 * canvas.height / 4,
+        radius: 70,
+        color: 'green',
+        vx: 1,
+        vy: -1,
+        elasticity: 0.8,
+    }
+];
+
+function detectCollision(ballA, ballB) {
+    const dx = ballA.x - ballB.x;
+    const dy = ballA.y - ballB.y;
+    const distance = Math.hypot(dx, dy);
+    return distance < ballA.radius + ballB.radius;
+}
+
+function resolveCollision(ballA, ballB) {
+    const dx = ballA.x - ballB.x;
+    const dy = ballA.y - ballB.y;
+
+    const angle = Math.atan2(dy, dx);
+    const u1 = rotate({ x: ballA.vx, y: ballA.vy }, -angle);
+    const u2 = rotate({ x: ballB.vx, y: ballB.vy }, -angle);
+
+    const v1 = { x: u1.x * (ballA.radius - ballB.radius) / (ballA.radius + ballB.radius) + u2.x * 2 * ballB.radius / (ballA.radius + ballB.radius), y: u1.y };
+    const v2 = { x: u2.x * (ballB.radius - ballA.radius) / (ballA.radius + ballB.radius) + u1.x * 2 * ballA.radius / (ballA.radius + ballB.radius), y: u2.y };
+
+    const vFinal1 = rotate(v1, angle);
+    const vFinal2 = rotate(v2, angle);
+
+    ballA.vx = vFinal1.x;
+    ballA.vy = vFinal1.y;
+
+    ballB.vx = vFinal2.x;
+    ballB.vy = vFinal2.y;
+
+    // Adjust positions to ensure balls are not overlapping after collision
+    const overlap = ballA.radius + ballB.radius - Math.hypot(dx, dy);
+    ballA.x += (overlap / 2) * Math.cos(angle);
+    ballA.y += (overlap / 2) * Math.sin(angle);
+    ballB.x -= (overlap / 2) * Math.cos(angle);
+    ballB.y -= (overlap / 2) * Math.sin(angle);
+}
+
+function rotate(velocity, angle) {
+    return {
+        x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
+        y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
+    };
+}
+
+canvas.addEventListener('mousedown', (e) => {
+    for (let ball of balls) {
+        const dist = Math.hypot(ball.x - e.clientX, ball.y - e.clientY);
+        if (dist < ball.radius) {
+            isDragging = true;
+            draggedBall = ball;
+            break;
+        }
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        draggedBall.vx = (e.clientX - draggedBall.x) * 0.2;
+        draggedBall.vy = (e.clientY - draggedBall.y) * 0.2;
+        draggedBall.x = e.clientX;
+        draggedBall.y = e.clientY;
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    isDragging = false;
+    draggedBall = null;
+});
+
+function update() {
+    for (let ball of balls) {
+        if (ball !== draggedBall) {
+            ball.vy += 0.5; // gravity
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Wall collisions
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.vx = -ball.vx * ball.elasticity;
+                if (ball.x + ball.radius > canvas.width) ball.x = canvas.width - ball.radius;
+                if (ball.x - ball.radius < 0) ball.x = ball.radius;
+            }
+
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.vy = -ball.vy * ball.elasticity;
+                if (ball.y + ball.radius > canvas.height) ball.y = canvas.height - ball.radius;
+                if (ball.y - ball.radius < 0) ball.y = ball.radius;
+            }
+
+            for (let otherBall of balls) {
+                if (ball !== otherBall && detectCollision(ball, otherBall)) {
+                    resolveCollision(ball, otherBall);
+                }
+            }
+        }
+    }
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let ball of balls) {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = ball.color;
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+update();
+
+    </script>
+</body>
+
+</html>

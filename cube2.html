@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Cube</title>
+
+            <style>
+               body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                }
+
+                .cube {
+                width: 200px;
+                height: 200px;
+                position: relative;
+                transform-style: preserve-3d;
+                transition: transform 0.5s ease-in-out;
+                }
+
+                .face {
+                position: absolute;
+                width: 200px;
+                height: 200px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 24px;
+                font-weight: bold;
+                user-select: none;
+                }
+
+                .front { background-color: red; transform: translateZ(100px); }
+                .back { background-color: green; transform: rotateY(180deg) translateZ(100px); }
+                .right { background-color: blue; transform: rotateY(90deg) translateZ(100px); }
+                .left { background-color: yellow; transform: rotateY(-90deg) translateZ(100px); }
+                .top { background-color: orange; transform: rotateX(90deg) translateZ(100px); }
+                .bottom { background-color: purple; transform: rotateX(-90deg) translateZ(100px); }
+                            
+            </style>
+        </head>
+
+        <body>
+            <div id="cube" class="cube">
+                <div class="face front">1</div>
+                <div class="face back">2</div>
+                <div class="face right">3</div>
+                <div class="face left">4</div>
+                <div class="face top">5</div>
+                <div class="face bottom">6</div>
+            </div>
+
+
+           <!-- <script>
+                let isDragging = false;
+                let initialX, initialY, currentX, currentY;
+                let rotationX = 0;
+                let rotationY = 0;
+
+                const cube = document.getElementById('cube');
+
+                cube.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                initialX = e.clientX - rotationY;
+                initialY = e.clientY - rotationX;
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+
+                    // Calculate the rotation based on mouse position relative to the center of the cube
+                    const cubeCenterX = window.innerWidth / 2;
+                    const cubeCenterY = window.innerHeight / 2;
+                    const deltaX = currentX - cubeCenterX;
+                    const deltaY = currentY - cubeCenterY;
+
+                    rotationY = deltaX / 2; // Adjust the division value for rotation sensitivity
+                    rotationX = -deltaY / 2; // Adjust the division value for rotation sensitivity
+
+                    cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+                }
+                });
+
+                document.addEventListener('mouseup', () => {
+                isDragging = false;
+                }); */
+            </script> -->
+
+            <script>
+               let isDragging = false;
+let initialX, initialY, currentX, currentY;
+let targetRotationX = 0;
+let targetRotationY = 0;
+let currentRotationX = 0;
+let currentRotationY = 0;
+
+const cube = document.getElementById('cube');
+
+cube.addEventListener('mousedown', handleMouseDown);
+cube.addEventListener('touchstart', handleTouchStart);
+
+document.addEventListener('mousemove', handleMouseMove);
+document.addEventListener('touchmove', handleTouchMove);
+
+document.addEventListener('mouseup', handleMouseUp);
+document.addEventListener('touchend', handleTouchEnd);
+
+function handleMouseDown(e) {
+  isDragging = true;
+  initialX = e.clientX - targetRotationY;
+  initialY = e.clientY - targetRotationX;
+}
+
+function handleTouchStart(e) {
+  const touch = e.touches[0];
+  isDragging = true;
+  initialX = touch.clientX - targetRotationY;
+  initialY = touch.clientY - targetRotationX;
+}
+
+function handleMouseMove(e) {
+  if (isDragging) {
+    currentX = e.clientX - initialX;
+    currentY = e.clientY - initialY;
+
+    targetRotationY = currentX;
+    targetRotationX = currentY;
+  }
+}
+
+function handleTouchMove(e) {
+  if (isDragging && e.touches.length === 1) {
+    const touch = e.touches[0];
+    currentX = touch.clientX - initialX;
+    currentY = touch.clientY - initialY;
+
+    targetRotationY = currentX;
+    targetRotationX = currentY;
+  }
+}
+
+function handleMouseUp() {
+  isDragging = false;
+}
+
+function handleTouchEnd() {
+  isDragging = false;
+}
+
+function updateRotation() {
+  const easeFactor = 0.1;
+
+  currentRotationY += (targetRotationY - currentRotationY) * easeFactor;
+  currentRotationX += (targetRotationX - currentRotationX) * easeFactor;
+
+  cube.style.transform = `rotateX(${currentRotationX}deg) rotateY(${currentRotationY}deg)`;
+  requestAnimationFrame(updateRotation);
+}
+
+updateRotation();
+            </script>
+        </body>
+
+    </html>
